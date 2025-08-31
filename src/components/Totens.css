@@ -1,0 +1,27 @@
+/* Totens Styles */
+.device-card {
+  transition: all 0.2s ease-in-out;
+  border: 1px solid var(--border);
+}
+
+.device-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: var(--primary);
+}
+
+.status-badge {
+  display: flex;
+  align-items: center;
+}
+
+.status-online {
+  background-color: #10b981;
+  color: white;
+}
+
+.status-offline {
+  background-color: #6b7280;
+  color: white;
+}
+
