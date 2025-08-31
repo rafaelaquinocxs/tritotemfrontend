@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3001/api';
+const API_BASE_URL = 'https://tritotembackend.onrender.com/api';
 
 class ApiService {
   async request(endpoint, options = {}) {
@@ -13,7 +13,7 @@ class ApiService {
 
     try {
       const response = await fetch(url, config);
-      
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -131,4 +131,3 @@ class ApiService {
 }
 
 export default new ApiService();
-
