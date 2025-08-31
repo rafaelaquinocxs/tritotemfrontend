@@ -1,0 +1,55 @@
+/* Dashboard Styles */
+.stat-card {
+  transition: all 0.2s ease-in-out;
+  border: 1px solid var(--border);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card-highlight {
+  border-color: var(--primary);
+  background: linear-gradient(135deg, var(--card) 0%, rgba(251, 191, 36, 0.05) 100%);
+}
+
+.stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  background-color: var(--muted);
+  color: var(--muted-foreground);
+}
+
+.stat-icon-highlight {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.quick-action-card {
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  border: 1px solid var(--border);
+}
+
+.quick-action-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+  border-color: var(--primary);
+}
+
+.action-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 4rem;
+  height: 4rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary) 0%, #f59e0b 100%);
+  color: var(--primary-foreground);
+}
+
