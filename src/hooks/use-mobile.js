@@ -1,19 +1,110 @@
-import * as React from "react"
+import { useAuth } from '../contexts/AuthContext';
 
-const MOBILE_BREAKPOINT = 768
+export function useApi() {
+  const { token, logout } = useAuth();
+  
+  // ✅ URL base SEM barra no final
+  const API_BASE = import.meta.env.VITE_API_URL || 'https://tritotem-cc0a461d6f3e.herokuapp.com/api';
+  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://tritotem-cc0a461d6f3e.herokuapp.com';
 
-export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState(undefined)
+  const makeRequest = async (endpoint, options = {}) => {
+    const url = `${API_BASE}${endpoint}`;
+    
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options.headers,
+      },
+      ...options,
+    };
 
-  React.useEffect(() => {
-    const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT - 1}px)`)
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
+    try {
+      const response = await fetch(url, config);
+      
+      if (response.status === 401) {
+        logout();
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Erro ${response.status}: ${response.statusText}`);
+      }
+      
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        return await response.json();
+      }
+      
+      return await response.text();
+    } catch (error) {
+      console.error('Erro na requisição:', error);
+      throw error;
     }
-    mql.addEventListener("change", onChange)
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    return () => mql.removeEventListener("change", onChange);
-  }, [])
+  };
 
-  return !!isMobile
+  const api = {
+    get: (endpoint) => makeRequest(endpoint, { method: 'GET' }),
+    
+    post: (endpoint, data) => makeRequest(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+    
+    put: (endpoint, data) => makeRequest(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    }),
+    
+    del: (endpoint) => makeRequest(endpoint, { method: 'DELETE' }),
+    
+    upload: async (endpoint, formData) => {
+      const url = `${API_BASE}${endpoint}`;
+      
+      const config = {
+        method: 'POST',
+        headers: {
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+        body: formData,
+      };
+
+      try {
+        const response = await fetch(url, config);
+        
+        if (response.status === 401) {
+          logout();
+          throw new Error('Sessão expirada. Faça login novamente.');
+        }
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `Erro ${response.status}: ${response.statusText}`);
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error('Erro no upload:', error);
+        throw error;
+      }
+    },
+
+    // ✅ Função para obter URL completa do player
+    getPlayerUrl: (deviceToken) => {
+      return `${API_BASE_URL}/player/${deviceToken}`;
+    },
+
+    // ✅ Função para obter URL de stream de mídia
+    getStreamUrl: (filename) => {
+      return `${API_BASE_URL}/stream/${filename}`;
+    },
+
+    // ✅ Função para obter URL de upload
+    getUploadUrl: (filename) => {
+      return `${API_BASE_URL}/uploads/${filename}`;
+    }
+  };
+
+  return api;
 }
