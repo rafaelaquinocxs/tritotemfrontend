@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://tritotembackend.onrender.com/api';
+const API_BASE_URL = 'https://tritotem-cc0a461d6f3e.herokuapp.com/';
 
 class ApiService {
   async request(endpoint, options = {}) {
