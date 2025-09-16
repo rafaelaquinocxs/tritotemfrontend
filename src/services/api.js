@@ -1,6 +1,6 @@
 
 // ✅ URL corrigida para o Heroku
-const API_BASE_URL = 'https://tritotem-cc0a461d6f3e.herokuapp.com/api';
+const API_BASE_URL = 'https://tritotem.herokuapp.com/api';
 
 class ApiService {
   async request(endpoint, options = {}) {
