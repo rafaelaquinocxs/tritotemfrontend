@@ -1,11 +1,12 @@
 
 // ✅ URL corrigida para o Heroku
-const API_BASE_URL = 'https://tritotem.herokuapp.com/api';
-
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL,
+});
 class ApiService {
   async request(endpoint, options = {}) {
-    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    const url = `${API_BASE_URL}${cleanEndpoint}`;
+    const cleanEndpoint = endpoint.replace(/^\/+/, '');
+    const url = `${API_BASE_URL}/${cleanEndpoint}`;
     
     console.log('🔍 Fazendo requisição para:', url); // Debug
     
