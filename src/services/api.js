@@ -1,9 +1,9 @@
+
 // ✅ URL corrigida para o Heroku
 const API_BASE_URL = 'https://tritotem-cc0a461d6f3e.herokuapp.com/api';
 
 class ApiService {
   async request(endpoint, options = {}) {
-    // ✅ Garantir que endpoint comece com / mas não tenha // duplo
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const url = `${API_BASE_URL}${cleanEndpoint}`;
     
@@ -25,7 +25,6 @@ class ApiService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      // Se a resposta não tem conteúdo, retorna null
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         return null;
@@ -38,7 +37,6 @@ class ApiService {
     }
   }
 
-  // Devices endpoints
   async getDevices() {
     console.log('📱 Buscando devices...');
     return this.request('/devices');
@@ -75,7 +73,6 @@ class ApiService {
     });
   }
 
-  // Media endpoints
   async getMedias() {
     console.log('🎥 Buscando medias...');
     return this.request('/media');
@@ -85,7 +82,7 @@ class ApiService {
     console.log('📤 Upload de media...');
     return this.request('/media', {
       method: 'POST',
-      headers: {}, // Remove Content-Type para FormData
+      headers: {},
       body: formData,
     });
   }
@@ -97,7 +94,6 @@ class ApiService {
     });
   }
 
-  // Playlists endpoints
   async getPlaylists() {
     console.log('📋 Buscando playlists...');
     return this.request('/playlists');
@@ -126,7 +122,6 @@ class ApiService {
     });
   }
 
-  // Dashboard stats
   async getDashboardStats() {
     console.log('📊 Buscando estatísticas do dashboard...');
     try {
