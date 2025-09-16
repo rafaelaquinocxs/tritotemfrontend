@@ -1,23 +1,17 @@
-import { useAuth } from '../contexts/AuthContext';
+// ✅ URL base SEM barra no final - CORRIGIDO
+const API_BASE_URL = 'https://tritotem-cc0a461d6f3e.herokuapp.com/api';
 
-export function useApi() {
-  const { token, logout } = useAuth();
-  
-  // ✅ URL base SEM barra no final - CORRIGIDO
-  const API_BASE = import.meta.env.VITE_API_URL || 'https://tritotem-cc0a461d6f3e.herokuapp.com/api';
-  const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://tritotem-cc0a461d6f3e.herokuapp.com';
-
-  const makeRequest = async (endpoint, options = {}) => {
+class ApiService {
+  async request(endpoint, options = {}) {
     // ✅ Garantir que endpoint comece com / mas não tenha // duplo
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-    const url = `${API_BASE}${cleanEndpoint}`;
+    const url = `${API_BASE_URL}${cleanEndpoint}`;
     
     console.log('🔍 Fazendo requisição para:', url); // Debug
     
     const config = {
       headers: {
         'Content-Type': 'application/json',
-        ...(token && { Authorization: `Bearer ${token}` }),
         ...options.headers,
       },
       ...options,
@@ -25,93 +19,141 @@ export function useApi() {
 
     try {
       const response = await fetch(url, config);
-      
-      if (response.status === 401) {
-        logout();
-        throw new Error('Sessão expirada. Faça login novamente.');
-      }
-      
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Erro ${response.status}: ${response.statusText}`);
+        console.error('❌ Resposta não OK:', response.status, response.statusText);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      
+
+      // Se a resposta não tem conteúdo, retorna null
       const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        return await response.json();
+      if (!contentType || !contentType.includes('application/json')) {
+        return null;
       }
-      
-      return await response.text();
+
+      return await response.json();
     } catch (error) {
-      console.error('Erro na requisição:', error);
+      console.error('❌ API request failed:', error);
       throw error;
     }
-  };
+  }
 
-  const api = {
-    get: (endpoint) => makeRequest(endpoint, { method: 'GET' }),
-    
-    post: (endpoint, data) => makeRequest(endpoint, {
+  // Devices endpoints
+  async getDevices() {
+    console.log('📱 Buscando devices...');
+    return this.request('/devices');
+  }
+
+  async createDevice(deviceData) {
+    console.log('📱 Criando device:', deviceData);
+    return this.request('/devices', {
       method: 'POST',
-      body: JSON.stringify(data),
-    }),
-    
-    put: (endpoint, data) => makeRequest(endpoint, {
+      body: JSON.stringify(deviceData),
+    });
+  }
+
+  async updateDevice(deviceId, deviceData) {
+    console.log('📱 Atualizando device:', deviceId, deviceData);
+    return this.request(`/devices/${deviceId}`, {
       method: 'PUT',
-      body: JSON.stringify(data),
-    }),
-    
-    del: (endpoint) => makeRequest(endpoint, { method: 'DELETE' }),
-    
-    upload: async (endpoint, formData) => {
-      const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
-      const url = `${API_BASE}${cleanEndpoint}`;
-      
-      console.log('🔍 Fazendo upload para:', url); // Debug
-      
-      const config = {
-        method: 'POST',
-        headers: {
-          ...(token && { Authorization: `Bearer ${token}` }),
-        },
-        body: formData,
+      body: JSON.stringify(deviceData),
+    });
+  }
+
+  async deleteDevice(deviceId) {
+    console.log('📱 Deletando device:', deviceId);
+    return this.request(`/devices/${deviceId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async broadcastAssignPlaylist(playlistId) {
+    console.log('📡 Broadcast assign playlist:', playlistId);
+    return this.request('/devices/broadcast-assign', {
+      method: 'POST',
+      body: JSON.stringify({ playlistId }),
+    });
+  }
+
+  // Media endpoints
+  async getMedias() {
+    console.log('🎥 Buscando medias...');
+    return this.request('/media');
+  }
+
+  async uploadMedia(formData) {
+    console.log('📤 Upload de media...');
+    return this.request('/media', {
+      method: 'POST',
+      headers: {}, // Remove Content-Type para FormData
+      body: formData,
+    });
+  }
+
+  async deleteMedia(mediaId) {
+    console.log('🗑️ Deletando media:', mediaId);
+    return this.request(`/media/${mediaId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Playlists endpoints
+  async getPlaylists() {
+    console.log('📋 Buscando playlists...');
+    return this.request('/playlists');
+  }
+
+  async createPlaylist(playlistData) {
+    console.log('📋 Criando playlist:', playlistData);
+    return this.request('/playlists', {
+      method: 'POST',
+      body: JSON.stringify(playlistData),
+    });
+  }
+
+  async updatePlaylist(playlistId, playlistData) {
+    console.log('📋 Atualizando playlist:', playlistId, playlistData);
+    return this.request(`/playlists/${playlistId}`, {
+      method: 'PUT',
+      body: JSON.stringify(playlistData),
+    });
+  }
+
+  async deletePlaylist(playlistId) {
+    console.log('🗑️ Deletando playlist:', playlistId);
+    return this.request(`/playlists/${playlistId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Dashboard stats
+  async getDashboardStats() {
+    console.log('📊 Buscando estatísticas do dashboard...');
+    try {
+      const [devices, medias, playlists] = await Promise.all([
+        this.getDevices(),
+        this.getMedias(),
+        this.getPlaylists(),
+      ]);
+
+      const onlineDevices = devices.filter(device => device.status === 'online').length;
+      const totalFileSize = medias.reduce((total, media) => total + (media.fileSize || 0), 0);
+      const totalDuration = medias.reduce((total, media) => total + (media.durationSec || 0), 0);
+
+      const stats = {
+        totalDevices: devices.length,
+        onlineDevices,
+        totalPlaylists: playlists.length,
+        totalMedia: medias.length,
+        totalFileSize,
+        totalDuration,
       };
 
-      try {
-        const response = await fetch(url, config);
-        
-        if (response.status === 401) {
-          logout();
-          throw new Error('Sessão expirada. Faça login novamente.');
-        }
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || `Erro ${response.status}: ${response.statusText}`);
-        }
-        
-        return await response.json();
-      } catch (error) {
-        console.error('Erro no upload:', error);
-        throw error;
-      }
-    },
-
-    // ✅ Função para obter URL completa do player
-    getPlayerUrl: (deviceToken) => {
-      return `${API_BASE_URL}/player/${deviceToken}`;
-    },
-
-    // ✅ Função para obter URL de stream de mídia
-    getStreamUrl: (filename) => {
-      return `${API_BASE_URL}/stream/${filename}`;
-    },
-
-    // ✅ Função para obter URL de upload
-    getUploadUrl: (filename) => {
-      return `${API_BASE_URL}/uploads/${filename}`;
+      console.log('📊 Estatísticas calculadas:', stats);
+      return stats;
+    } catch (error) {
+      console.error('❌ Erro ao buscar estatísticas:', error);
+      throw error;
     }
-  };
-
-  return api;
+  }
 }
