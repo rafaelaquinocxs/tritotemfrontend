@@ -1,12 +1,10 @@
+// Serviço de API para comunicação com o backend
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
-// ✅ URL corrigida para o Heroku
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
-});
 class ApiService {
   async request(endpoint, options = {}) {
     const cleanEndpoint = endpoint.replace(/^\/+/, '');
-    const url = `${API_BASE_URL}/${cleanEndpoint}`;
+    const url = `${API_BASE_URL}/api/${cleanEndpoint}`;
     
     console.log('🔍 Fazendo requisição para:', url); // Debug
     
@@ -40,12 +38,12 @@ class ApiService {
 
   async getDevices() {
     console.log('📱 Buscando devices...');
-    return this.request('/devices');
+    return this.request('devices');
   }
 
   async createDevice(deviceData) {
     console.log('📱 Criando device:', deviceData);
-    return this.request('/devices', {
+    return this.request('devices', {
       method: 'POST',
       body: JSON.stringify(deviceData),
     });
@@ -53,7 +51,7 @@ class ApiService {
 
   async updateDevice(deviceId, deviceData) {
     console.log('📱 Atualizando device:', deviceId, deviceData);
-    return this.request(`/devices/${deviceId}`, {
+    return this.request(`devices/${deviceId}`, {
       method: 'PUT',
       body: JSON.stringify(deviceData),
     });
@@ -61,14 +59,14 @@ class ApiService {
 
   async deleteDevice(deviceId) {
     console.log('📱 Deletando device:', deviceId);
-    return this.request(`/devices/${deviceId}`, {
+    return this.request(`devices/${deviceId}`, {
       method: 'DELETE',
     });
   }
 
   async broadcastAssignPlaylist(playlistId) {
     console.log('📡 Broadcast assign playlist:', playlistId);
-    return this.request('/devices/broadcast-assign', {
+    return this.request('devices/broadcast-assign', {
       method: 'POST',
       body: JSON.stringify({ playlistId }),
     });
@@ -76,33 +74,33 @@ class ApiService {
 
   async getMedias() {
     console.log('🎥 Buscando medias...');
-    return this.request('/media');
+    return this.request('media');
   }
 
   async uploadMedia(formData) {
     console.log('📤 Upload de media...');
-    return this.request('/media', {
+    return this.request('media', {
       method: 'POST',
-      headers: {},
+      headers: {}, // Remove Content-Type para FormData
       body: formData,
     });
   }
 
   async deleteMedia(mediaId) {
     console.log('🗑️ Deletando media:', mediaId);
-    return this.request(`/media/${mediaId}`, {
+    return this.request(`media/${mediaId}`, {
       method: 'DELETE',
     });
   }
 
   async getPlaylists() {
     console.log('📋 Buscando playlists...');
-    return this.request('/playlists');
+    return this.request('playlists');
   }
 
   async createPlaylist(playlistData) {
     console.log('📋 Criando playlist:', playlistData);
-    return this.request('/playlists', {
+    return this.request('playlists', {
       method: 'POST',
       body: JSON.stringify(playlistData),
     });
@@ -110,7 +108,7 @@ class ApiService {
 
   async updatePlaylist(playlistId, playlistData) {
     console.log('📋 Atualizando playlist:', playlistId, playlistData);
-    return this.request(`/playlists/${playlistId}`, {
+    return this.request(`playlists/${playlistId}`, {
       method: 'PUT',
       body: JSON.stringify(playlistData),
     });
@@ -118,7 +116,7 @@ class ApiService {
 
   async deletePlaylist(playlistId) {
     console.log('🗑️ Deletando playlist:', playlistId);
-    return this.request(`/playlists/${playlistId}`, {
+    return this.request(`playlists/${playlistId}`, {
       method: 'DELETE',
     });
   }
@@ -155,3 +153,4 @@ class ApiService {
 }
 
 export default new ApiService();
+
