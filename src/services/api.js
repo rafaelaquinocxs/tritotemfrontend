@@ -1,161 +1,103 @@
-// ✅ URL corrigida para o Heroku
 const API_BASE_URL = 'https://tritotem-cc0a461d6f3e.herokuapp.com/api';
 
-class ApiService {
-  async request(endpoint, options = {}) {
-    // ✅ Garantir que endpoint comece com / mas não tenha // duplo
-    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+const request = async (endpoint, method = 'GET', body = null, headers = {}) => {
+  try {
+    const cleanEndpoint = `/${endpoint}`.replace(/\/{2,}/g, '/');
     const url = `${API_BASE_URL}${cleanEndpoint}`;
-    
-    console.log('🔍 Fazendo requisição para:', url); // Debug
-    
-    const config = {
+
+    const options = {
+      method,
       headers: {
         'Content-Type': 'application/json',
-        ...options.headers,
+        ...headers,
       },
-      ...options,
     };
 
-    try {
-      const response = await fetch(url, config);
-
-      if (!response.ok) {
-        console.error('❌ Resposta não OK:', response.status, response.statusText);
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      // Se a resposta não tem conteúdo, retorna null
-      const contentType = response.headers.get('content-type');
-      if (!contentType || !contentType.includes('application/json')) {
-        return null;
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('❌ API request failed:', error);
-      throw error;
+    if (body) {
+      options.body = JSON.stringify(body);
     }
-  }
 
-  // Devices endpoints
-  async getDevices() {
-    console.log('📱 Buscando devices...');
-    return this.request('/devices');
-  }
+    const response = await fetch(url, options);
 
-  async createDevice(deviceData) {
-    console.log('📱 Criando device:', deviceData);
-    return this.request('/devices', {
-      method: 'POST',
-      body: JSON.stringify(deviceData),
-    });
-  }
-
-  async updateDevice(deviceId, deviceData) {
-    console.log('📱 Atualizando device:', deviceId, deviceData);
-    return this.request(`/devices/${deviceId}`, {
-      method: 'PUT',
-      body: JSON.stringify(deviceData),
-    });
-  }
-
-  async deleteDevice(deviceId) {
-    console.log('📱 Deletando device:', deviceId);
-    return this.request(`/devices/${deviceId}`, {
-      method: 'DELETE',
-    });
-  }
-
-  async broadcastAssignPlaylist(playlistId) {
-    console.log('📡 Broadcast assign playlist:', playlistId);
-    return this.request('/devices/broadcast-assign', {
-      method: 'POST',
-      body: JSON.stringify({ playlistId }),
-    });
-  }
-
-  // Media endpoints
-  async getMedias() {
-    console.log('🎥 Buscando medias...');
-    return this.request('/media');
-  }
-
-  async uploadMedia(formData) {
-    console.log('📤 Upload de media...');
-    return this.request('/media', {
-      method: 'POST',
-      headers: {}, // Remove Content-Type para FormData
-      body: formData,
-    });
-  }
-
-  async deleteMedia(mediaId) {
-    console.log('🗑️ Deletando media:', mediaId);
-    return this.request(`/media/${mediaId}`, {
-      method: 'DELETE',
-    });
-  }
-
-  // Playlists endpoints
-  async getPlaylists() {
-    console.log('📋 Buscando playlists...');
-    return this.request('/playlists');
-  }
-
-  async createPlaylist(playlistData) {
-    console.log('📋 Criando playlist:', playlistData);
-    return this.request('/playlists', {
-      method: 'POST',
-      body: JSON.stringify(playlistData),
-    });
-  }
-
-  async updatePlaylist(playlistId, playlistData) {
-    console.log('📋 Atualizando playlist:', playlistId, playlistData);
-    return this.request(`/playlists/${playlistId}`, {
-      method: 'PUT',
-      body: JSON.stringify(playlistData),
-    });
-  }
-
-  async deletePlaylist(playlistId) {
-    console.log('🗑️ Deletando playlist:', playlistId);
-    return this.request(`/playlists/${playlistId}`, {
-      method: 'DELETE',
-    });
-  }
-
-  // Dashboard stats
-  async getDashboardStats() {
-    console.log('📊 Buscando estatísticas do dashboard...');
-    try {
-      const [devices, medias, playlists] = await Promise.all([
-        this.getDevices(),
-        this.getMedias(),
-        this.getPlaylists(),
-      ]);
-
-      const onlineDevices = devices.filter(device => device.status === 'online').length;
-      const totalFileSize = medias.reduce((total, media) => total + (media.fileSize || 0), 0);
-      const totalDuration = medias.reduce((total, media) => total + (media.durationSec || 0), 0);
-
-      const stats = {
-        totalDevices: devices.length,
-        onlineDevices,
-        totalPlaylists: playlists.length,
-        totalMedia: medias.length,
-        totalFileSize,
-        totalDuration,
-      };
-
-      console.log('📊 Estatísticas calculadas:', stats);
-      return stats;
-    } catch (error) {
-      console.error('❌ Erro ao buscar estatísticas:', error);
-      throw error;
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Erro na requisição: ${response.status}`);
     }
-  }
-}
 
-export default new ApiService();
+    return await response.json();
+  } catch (error) {
+    console.error('Erro na API:', error.message);
+    throw error;
+  }
+};
+
+// ====================== USUÁRIOS ======================
+
+export const getUsers = () => request('/users');
+
+export const getUserById = (id) => request(`/users/${id}`);
+
+export const createUser = (userData) =>
+  request('/users', 'POST', userData);
+
+export const updateUser = (id, userData) =>
+  request(`/users/${id}`, 'PUT', userData);
+
+export const deleteUser = (id) =>
+  request(`/users/${id}`, 'DELETE');
+
+// ====================== DISPOSITIVOS ======================
+
+export const getDevices = () => request('/devices');
+
+export const getDeviceById = (id) =>
+  request(`/devices/${id}`);
+
+export const createDevice = (deviceData) =>
+  request('/devices', 'POST', deviceData);
+
+export const updateDevice = (id, deviceData) =>
+  request(`/devices/${id}`, 'PUT', deviceData);
+
+export const deleteDevice = (id) =>
+  request(`/devices/${id}`, 'DELETE');
+
+// ====================== MÍDIAS ======================
+
+export const getMedias = () => request('/medias');
+
+export const getMediaById = (id) =>
+  request(`/medias/${id}`);
+
+export const createMedia = (mediaData) =>
+  request('/medias', 'POST', mediaData);
+
+export const updateMedia = (id, mediaData) =>
+  request(`/medias/${id}`, 'PUT', mediaData);
+
+export const deleteMedia = (id) =>
+  request(`/medias/${id}`, 'DELETE');
+
+// ====================== TELAS ======================
+
+export const getScreens = () => request('/screens');
+
+export const getScreenById = (id) =>
+  request(`/screens/${id}`);
+
+export const createScreen = (screenData) =>
+  request('/screens', 'POST', screenData);
+
+export const updateScreen = (id, screenData) =>
+  request(`/screens/${id}`, 'PUT', screenData);
+
+export const deleteScreen = (id) =>
+  request(`/screens/${id}`, 'DELETE');
+
+// ====================== AUTENTICAÇÃO ======================
+
+export const login = (credentials) =>
+  request('/auth/login', 'POST', credentials);
+
+export const register = (userData) =>
+  request('/auth/register', 'POST', userData);
