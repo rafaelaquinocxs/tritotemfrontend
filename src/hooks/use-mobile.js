@@ -3,12 +3,16 @@ import { useAuth } from '../contexts/AuthContext';
 export function useApi() {
   const { token, logout } = useAuth();
   
-  // ✅ URL base SEM barra no final
+  // ✅ URL base SEM barra no final - CORRIGIDO
   const API_BASE = import.meta.env.VITE_API_URL || 'https://tritotem-cc0a461d6f3e.herokuapp.com/api';
   const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://tritotem-cc0a461d6f3e.herokuapp.com';
 
   const makeRequest = async (endpoint, options = {}) => {
-    const url = `${API_BASE}${endpoint}`;
+    // ✅ Garantir que endpoint comece com / mas não tenha // duplo
+    const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = `${API_BASE}${cleanEndpoint}`;
+    
+    console.log('🔍 Fazendo requisição para:', url); // Debug
     
     const config = {
       headers: {
@@ -60,7 +64,10 @@ export function useApi() {
     del: (endpoint) => makeRequest(endpoint, { method: 'DELETE' }),
     
     upload: async (endpoint, formData) => {
-      const url = `${API_BASE}${endpoint}`;
+      const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+      const url = `${API_BASE}${cleanEndpoint}`;
+      
+      console.log('🔍 Fazendo upload para:', url); // Debug
       
       const config = {
         method: 'POST',
