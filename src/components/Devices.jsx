@@ -303,7 +303,7 @@ const Devices = () => {
                   <SelectValue placeholder="Atribuir playlist a todos os dispositivos" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Remover playlist de todos</SelectItem>
+                  <SelectItem value={null}>Remover playlist de todos</SelectItem>
                   {playlists.map((playlist) => (
                     <SelectItem key={playlist._id} value={playlist._id}>
                       {playlist.name}
@@ -387,7 +387,7 @@ const Devices = () => {
                       <SelectValue placeholder="Nenhuma playlist" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Nenhuma playlist</SelectItem>
+                      <SelectItem value={null}>Nenhuma playlist</SelectItem>
                   {playlists.map((playlist) => (
                         <SelectItem key={playlist._id} value={playlist._id}>
                           {playlist.name} ({playlist.media?.length || 0} mídias)
